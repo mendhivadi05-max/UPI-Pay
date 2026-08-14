@@ -22,7 +22,7 @@ A static, mobile-first UPI handoff page for **Medhansh Khattar**. It does not pr
 
 1. The visitor taps the NFC tag.
 2. The page opens and asks for an amount.
-3. The visitor chooses Google Pay, Paytm, FamApp, or another UPI app.
+3. The visitor explicitly chooses Google Pay, PhonePe, Paytm, FamApp, or BHIM.
 4. Android opens the selected app with the payee and amount filled in.
 5. The visitor verifies the details and enters their UPI PIN inside the UPI app.
 
@@ -30,5 +30,6 @@ A static, mobile-first UPI handoff page for **Medhansh Khattar**. It does not pr
 
 - This page cannot verify whether a payment succeeded. Check the receiving bank or UPI app.
 - App-specific launch behavior depends on Android and the installed UPI app version.
-- iPhones fall back to the generic UPI URI; support depends on the installed apps.
+- The portal intentionally avoids a generic UPI launch because Android may send that directly to a saved default app.
+- The explicit app picker is designed for Android; unsupported or missing apps are sent to their Play Store page.
 - Never add a UPI PIN, bank password, card PIN, or OTP field to this page.

@@ -27,6 +27,11 @@
   var editPaymentButton = document.getElementById("edit-payment");
   var launchStatus = document.getElementById("launch-status");
   var submitAttempted = false;
+  var siteStyles = document.getElementById("site-styles");
+
+  if (siteStyles) {
+    siteStyles.media = "all";
+  }
 
   function sanitizeAmount(value) {
     var normalized = value.replace(/[^\d.]/g, "");

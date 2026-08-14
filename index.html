@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7fb">
+  <meta name="description" content="Pay Medhansh Khattar securely using any UPI app.">
+  <title>Pay Medhansh Khattar</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #16181d;
+      --muted: #6e7480;
+      --line: #e7e9ef;
+      --surface: rgba(255, 255, 255, 0.88);
+      --accent: #5c45e8;
+      --accent-dark: #4732c9;
+      --success: #16845b;
+      --danger: #bf3b48;
+      --shadow: 0 28px 80px rgba(32, 25, 79, 0.13);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; }
+
+    body {
+      min-height: 100vh;
+      min-height: 100svh;
+      margin: 0;
+      padding: max(20px, env(safe-area-inset-top)) 18px max(22px, env(safe-area-inset-bottom));
+      display: grid;
+      place-items: center;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 5%, rgba(118, 92, 255, 0.19), transparent 34%),
+        radial-gradient(circle at 95% 85%, rgba(29, 202, 151, 0.16), transparent 32%),
+        #f6f7fb;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input { font: inherit; }
+
+    .page {
+      width: min(100%, 430px);
+      animation: arrive 420ms cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .card {
+      position: relative;
+      padding: 27px 24px 22px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      border-radius: 30px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, #735cff, #2bc69c);
+    }
+
+    .identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 25px;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      color: white;
+      background: linear-gradient(145deg, #6e57ee, #4330b9);
+      box-shadow: 0 10px 22px rgba(76, 53, 202, 0.26);
+      font-size: 21px;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+    }
+
+    .eyebrow {
+      margin: 0 0 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.2;
+      letter-spacing: -0.035em;
+    }
+
+    .upi-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .verified {
+      width: 16px;
+      height: 16px;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--success);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .section-label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .amount-wrap {
+      height: 70px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 18px;
+      border: 1.5px solid var(--line);
+      border-radius: 20px;
+      background: #fff;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .amount-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(92, 69, 232, 0.11);
+    }
+
+    .currency {
+      color: #353944;
+      font-size: 27px;
+      font-weight: 700;
+    }
+
+    #amount {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+      font-size: 31px;
+      font-weight: 760;
+      letter-spacing: -0.04em;
+    }
+
+    #amount::placeholder { color: #c1c4cc; }
+
+    .quick-amounts {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 11px 0 4px;
+    }
+
+    .chip {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: #4b505c;
+      background: rgba(255,255,255,.7);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+
+    .chip:active { transform: scale(.96); }
+    .chip:hover { border-color: #bcb4ef; color: var(--accent); }
+
+    .field-error {
+      min-height: 19px;
+      margin: 6px 2px 2px;
+      color: var(--danger);
+      font-size: 12px;
+    }
+
+    .primary {
+      width: 100%;
+      min-height: 56px;
+      margin-top: 8px;
+      border: 0;
+      border-radius: 18px;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      box-shadow: 0 12px 25px rgba(76, 53, 202, 0.25);
+      font-size: 16px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform 130ms ease, box-shadow 130ms ease, opacity 130ms ease;
+    }
+
+    .primary:hover { box-shadow: 0 15px 29px rgba(76, 53, 202, 0.3); }
+    .primary:active { transform: translateY(1px) scale(.99); }
+    .primary:disabled { cursor: not-allowed; opacity: .45; box-shadow: none; }
+
+    .apps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-height: 0;
+      margin-top: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-5px);
+      transition: max-height 260ms ease, margin 260ms ease, opacity 180ms ease, transform 180ms ease;
+    }
+
+    .apps.show {
+      max-height: 130px;
+      margin-top: 14px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .app-button {
+      min-height: 76px;
+      padding: 10px 5px;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      color: #353944;
+      background: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .app-button:hover { border-color: #bcb4ef; box-shadow: 0 8px 18px rgba(29, 24, 65, .08); }
+    .app-button:active { transform: scale(.97); }
+
+    .app-mark {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: white;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .gpay { background: linear-gradient(135deg, #4285f4 0 50%, #34a853 50%); }
+    .paytm { color: #043b72; background: #e8f7ff; }
+    .fam { background: linear-gradient(135deg, #ff5e3a, #ff8a35); }
+
+    .any-upi {
+      width: 100%;
+      min-height: 43px;
+      display: none;
+      margin-top: 9px;
+      border: 0;
+      color: var(--accent);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .any-upi.show { display: block; }
+
+    .security-note {
+      margin: 17px 2px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .lock { color: var(--success); font-size: 13px; }
+
+    .footer {
+      margin: 15px 12px 0;
+      color: #878c96;
+      font-size: 11px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      z-index: 5;
+      padding: 11px 16px;
+      border-radius: 13px;
+      color: white;
+      background: rgba(24, 26, 31, .92);
+      box-shadow: 0 12px 30px rgba(0,0,0,.2);
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 12px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @keyframes arrive {
+      from { opacity: 0; transform: translateY(12px) scale(.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (max-width: 360px) {
+      .card { padding-inline: 18px; }
+      .quick-amounts { gap: 6px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card" aria-labelledby="page-title">
+      <header class="identity">
+        <div class="avatar" aria-hidden="true">MK</div>
+        <div>
+          <p class="eyebrow">UPI payment</p>
+          <h1 id="page-title">Medhansh Khattar</h1>
+          <div class="upi-row">
+            <span class="verified" aria-label="Verified payee">✓</span>
+            <span>medhanshkhattar05@okicici</span>
+          </div>
+        </div>
+      </header>
+
+      <form id="payment-form" novalidate>
+        <label class="section-label" for="amount">Enter amount</label>
+        <div class="amount-wrap">
+          <span class="currency" aria-hidden="true">₹</span>
+          <input id="amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0" maxlength="10" aria-describedby="amount-error">
+        </div>
+
+        <div class="quick-amounts" aria-label="Quick amounts">
+          <button class="chip" type="button" data-amount="50">₹50</button>
+          <button class="chip" type="button" data-amount="100">₹100</button>
+          <button class="chip" type="button" data-amount="200">₹200</button>
+          <button class="chip" type="button" data-amount="500">₹500</button>
+        </div>
+
+        <div id="amount-error" class="field-error" role="alert" aria-live="polite"></div>
+
+        <button id="continue-button" class="primary" type="submit" disabled>Continue to pay</button>
+      </form>
+
+      <div id="apps" class="apps" aria-label="Choose a UPI app">
+        <button class="app-button" type="button" data-app="gpay">
+          <span class="app-mark gpay">G</span>
+          Google Pay
+        </button>
+        <button class="app-button" type="button" data-app="paytm">
+          <span class="app-mark paytm">P</span>
+          Paytm
+        </button>
+        <button class="app-button" type="button" data-app="famapp">
+          <span class="app-mark fam">F</span>
+          FamApp
+        </button>
+      </div>
+      <button id="any-upi" class="any-upi" type="button">Choose another UPI app</button>
+
+      <p class="security-note">
+        <span class="lock" aria-hidden="true">●</span>
+        Your UPI PIN is entered only inside your selected payment app.
+      </p>
+    </section>
+
+    <p class="footer">Confirm the payee name and amount in your UPI app before approving payment.</p>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const PAYEE = Object.freeze({
+        address: "medhanshkhattar05@okicici",
+        name: "Medhansh Khattar",
+        currency: "INR",
+        note: "NFC payment"
+      });
+
+      const PACKAGES = Object.freeze({
+        gpay: "com.google.android.apps.nbu.paisa.user",
+        paytm: "net.one97.paytm",
+        famapp: "com.fampay.in"
+      });
+
+      const amountInput = document.querySelector("#amount");
+      const error = document.querySelector("#amount-error");
+      const continueButton = document.querySelector("#continue-button");
+      const apps = document.querySelector("#apps");
+      const anyUpiButton = document.querySelector("#any-upi");
+      const toast = document.querySelector("#toast");
+      let toastTimer;
+
+      const cleanAmount = value => {
+        const normalized = value.replace(/[^\d.]/g, "");
+        const [whole = "", ...decimalParts] = normalized.split(".");
+        return decimalParts.length ? `${whole}.${decimalParts.join("").slice(0, 2)}` : whole;
+      };
+
+      const amountValue = () => Number.parseFloat(amountInput.value);
+
+      const validate = (showError = false) => {
+        const amount = amountValue();
+        let message = "";
+        if (!amountInput.value) message = "Enter an amount to continue.";
+        else if (!Number.isFinite(amount) || amount <= 0) message = "Enter an amount greater than ₹0.";
+        else if (amount > 100000) message = "For this demo, enter ₹1,00,000 or less.";
+
+        error.textContent = showError ? message : "";
+        continueButton.disabled = Boolean(message);
+        return !message;
+      };
+
+      const params = () => new URLSearchParams({
+        pa: PAYEE.address,
+        pn: PAYEE.name,
+        am: amountValue().toFixed(2),
+        cu: PAYEE.currency,
+        tn: PAYEE.note
+      }).toString();
+
+      const universalLink = () => `upi://pay?${params()}`;
+
+      const intentLink = app => {
+        const packageName = PACKAGES[app];
+        return `intent://pay?${params()}#Intent;scheme=upi;package=${packageName};end`;
+      };
+
+      const showToast = message => {
+        clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.classList.add("show");
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+      };
+
+      const launch = app => {
+        if (!validate(true)) return;
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        showToast("Opening your payment app…");
+        window.location.href = isAndroid && app ? intentLink(app) : universalLink();
+      };
+
+      amountInput.addEventListener("input", event => {
+        const cleaned = cleanAmount(event.target.value);
+        if (cleaned !== event.target.value) event.target.value = cleaned;
+        validate(false);
+        apps.classList.remove("show");
+        anyUpiButton.classList.remove("show");
+      });
+
+      document.querySelectorAll("[data-amount]").forEach(button => {
+        button.addEventListener("click", () => {
+          amountInput.value = button.dataset.amount;
+          validate(false);
+          amountInput.focus();
+        });
+      });
+
+      document.querySelector("#payment-form").addEventListener("submit", event => {
+        event.preventDefault();
+        if (!validate(true)) {
+          amountInput.focus();
+          return;
+        }
+        apps.classList.add("show");
+        anyUpiButton.classList.add("show");
+        document.querySelector("[data-app='gpay']").focus({ preventScroll: true });
+      });
+
+      document.querySelectorAll("[data-app]").forEach(button => {
+        button.addEventListener("click", () => launch(button.dataset.app));
+      });
+
+      anyUpiButton.addEventListener("click", () => launch(null));
+    })();
+  </script>
+</body>
+</html>

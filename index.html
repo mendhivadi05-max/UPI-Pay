@@ -220,6 +220,15 @@
     .primary:active { transform: translateY(1px) scale(.99); }
     .primary:disabled { cursor: not-allowed; opacity: .45; box-shadow: none; }
 
+    .app-picker-label {
+      display: none;
+      margin: 18px 2px 0;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .app-picker-label.show { display: block; }
+
     .apps {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -233,8 +242,8 @@
     }
 
     .apps.show {
-      max-height: 130px;
-      margin-top: 14px;
+      max-height: 230px;
+      margin-top: 10px;
       opacity: 1;
       transform: translateY(0);
     }
@@ -273,21 +282,8 @@
     .gpay { background: linear-gradient(135deg, #4285f4 0 50%, #34a853 50%); }
     .paytm { color: #043b72; background: #e8f7ff; }
     .fam { background: linear-gradient(135deg, #ff5e3a, #ff8a35); }
-
-    .any-upi {
-      width: 100%;
-      min-height: 43px;
-      display: none;
-      margin-top: 9px;
-      border: 0;
-      color: var(--accent);
-      background: transparent;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .any-upi.show { display: block; }
+    .phonepe { background: linear-gradient(135deg, #6739b7, #4b2191); }
+    .bhim { background: linear-gradient(135deg, #f28b2d 0 50%, #159b72 50%); }
 
     .security-note {
       margin: 17px 2px 0;
@@ -379,10 +375,15 @@
         <button id="continue-button" class="primary" type="submit" disabled>Continue to pay</button>
       </form>
 
-      <div id="apps" class="apps" aria-label="Choose a UPI app">
+      <p id="app-picker-label" class="app-picker-label">Choose your UPI app</p>
+      <div id="apps" class="apps" aria-labelledby="app-picker-label">
         <button class="app-button" type="button" data-app="gpay">
           <span class="app-mark gpay">G</span>
           Google Pay
+        </button>
+        <button class="app-button" type="button" data-app="phonepe">
+          <span class="app-mark phonepe">Pe</span>
+          PhonePe
         </button>
         <button class="app-button" type="button" data-app="paytm">
           <span class="app-mark paytm">P</span>
@@ -392,8 +393,11 @@
           <span class="app-mark fam">F</span>
           FamApp
         </button>
+        <button class="app-button" type="button" data-app="bhim">
+          <span class="app-mark bhim">B</span>
+          BHIM
+        </button>
       </div>
-      <button id="any-upi" class="any-upi" type="button">Choose another UPI app</button>
 
       <p class="security-note">
         <span class="lock" aria-hidden="true">●</span>
@@ -417,15 +421,25 @@
 
       const PACKAGES = Object.freeze({
         gpay: "com.google.android.apps.nbu.paisa.user",
+        phonepe: "com.phonepe.app",
         paytm: "net.one97.paytm",
-        famapp: "com.fampay.in"
+        famapp: "com.fampay.in",
+        bhim: "in.org.npci.upiapp"
+      });
+
+      const STORE_URLS = Object.freeze({
+        gpay: "https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user",
+        phonepe: "https://play.google.com/store/apps/details?id=com.phonepe.app",
+        paytm: "https://play.google.com/store/apps/details?id=net.one97.paytm",
+        famapp: "https://play.google.com/store/apps/details?id=com.fampay.in",
+        bhim: "https://play.google.com/store/apps/details?id=in.org.npci.upiapp"
       });
 
       const amountInput = document.querySelector("#amount");
       const error = document.querySelector("#amount-error");
       const continueButton = document.querySelector("#continue-button");
       const apps = document.querySelector("#apps");
-      const anyUpiButton = document.querySelector("#any-upi");
+      const appPickerLabel = document.querySelector("#app-picker-label");
       const toast = document.querySelector("#toast");
       let toastTimer;
 
@@ -457,11 +471,10 @@
         tn: PAYEE.note
       }).toString();
 
-      const universalLink = () => `upi://pay?${params()}`;
-
       const intentLink = app => {
         const packageName = PACKAGES[app];
-        return `intent://pay?${params()}#Intent;scheme=upi;package=${packageName};end`;
+        const fallback = encodeURIComponent(STORE_URLS[app]);
+        return `intent://pay?${params()}#Intent;scheme=upi;package=${packageName};S.browser_fallback_url=${fallback};end`;
       };
 
       const showToast = message => {
@@ -474,8 +487,12 @@
       const launch = app => {
         if (!validate(true)) return;
         const isAndroid = /Android/i.test(navigator.userAgent);
-        showToast("Opening your payment app…");
-        window.location.href = isAndroid && app ? intentLink(app) : universalLink();
+        if (!isAndroid) {
+          showToast("Choose a UPI app on an Android phone.");
+          return;
+        }
+        showToast("Opening your selected UPI app…");
+        window.location.href = intentLink(app);
       };
 
       amountInput.addEventListener("input", event => {
@@ -483,7 +500,7 @@
         if (cleaned !== event.target.value) event.target.value = cleaned;
         validate(false);
         apps.classList.remove("show");
-        anyUpiButton.classList.remove("show");
+        appPickerLabel.classList.remove("show");
       });
 
       document.querySelectorAll("[data-amount]").forEach(button => {
@@ -500,16 +517,14 @@
           amountInput.focus();
           return;
         }
+        appPickerLabel.classList.add("show");
         apps.classList.add("show");
-        anyUpiButton.classList.add("show");
         document.querySelector("[data-app='gpay']").focus({ preventScroll: true });
       });
 
       document.querySelectorAll("[data-app]").forEach(button => {
         button.addEventListener("click", () => launch(button.dataset.app));
       });
-
-      anyUpiButton.addEventListener("click", () => launch(null));
     })();
   </script>
 </body>

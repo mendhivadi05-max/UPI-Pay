@@ -2,21 +2,18 @@
 
 A static, mobile-first UPI handoff page for **Medhansh Khattar**. It does not process payments or collect a UPI PIN. It creates a UPI request with the visitor's chosen amount and opens their selected payment app.
 
-## Publish with GitHub Pages
+## Live deployments
 
-1. Create a new public GitHub repository.
-2. Upload `index.html` to the repository root.
-3. Open **Settings → Pages**.
-4. Under **Build and deployment**, select **Deploy from a branch**.
-5. Choose `main` and `/ (root)`, then save.
-6. GitHub will provide an HTTPS URL such as `https://username.github.io/repository/`.
+- GitHub Pages: `https://mendhivadi05-max.github.io/UPI-Pay/index.html`
+- Vercel: import this repository using the included `vercel.json`, then use the generated `.vercel.app` URL.
 
 ## Write the NFC tag
 
-1. Open **NFC Tools → Write → Add a record → Custom URL/URI**.
-2. Paste the published HTTPS URL.
-3. Write and test the tag on more than one Android phone.
-4. Make the tag read-only only after the complete flow works.
+1. Erase all previous NDEF records from the tag.
+2. Open **NFC Tools → Write → Add a record → Custom URL/URI**.
+3. Paste exactly one deployed HTTPS URL—not the `github.com` repository URL.
+4. Write and test the tag on more than one Android phone.
+5. Make the tag read-only only after the complete flow works.
 
 ## Payment flow
 
@@ -32,4 +29,5 @@ A static, mobile-first UPI handoff page for **Medhansh Khattar**. It does not pr
 - App-specific launch behavior depends on Android and the installed UPI app version.
 - The portal intentionally avoids a generic UPI launch because Android may send that directly to a saved default app.
 - The explicit app picker is designed for Android; unsupported or missing apps are sent to their Play Store page.
+- App choices are native intent links so Chrome and Samsung Internet treat the tap as a direct user gesture.
 - Never add a UPI PIN, bank password, card PIN, or OTP field to this page.

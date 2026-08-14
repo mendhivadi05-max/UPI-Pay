@@ -311,6 +311,8 @@
       background: #fff;
       font-size: 11px;
       font-weight: 700;
+      text-align: center;
+      text-decoration: none;
       cursor: pointer;
       transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
     }
@@ -439,26 +441,26 @@
 
       <p id="app-picker-label" class="app-picker-label">Choose your UPI app</p>
       <div id="apps" class="apps" aria-labelledby="app-picker-label">
-        <button class="app-button" type="button" data-app="gpay">
+        <a class="app-button" href="#" data-app="gpay">
           <span class="app-mark gpay">G</span>
           Google Pay
-        </button>
-        <button class="app-button" type="button" data-app="phonepe">
+        </a>
+        <a class="app-button" href="#" data-app="phonepe">
           <span class="app-mark phonepe">Pe</span>
           PhonePe
-        </button>
-        <button class="app-button" type="button" data-app="paytm">
+        </a>
+        <a class="app-button" href="#" data-app="paytm">
           <span class="app-mark paytm">P</span>
           Paytm
-        </button>
-        <button class="app-button" type="button" data-app="famapp">
+        </a>
+        <a class="app-button" href="#" data-app="famapp">
           <span class="app-mark fam">F</span>
           FamApp
-        </button>
-        <button class="app-button" type="button" data-app="bhim">
+        </a>
+        <a class="app-button" href="#" data-app="bhim">
           <span class="app-mark bhim">B</span>
           BHIM
-        </button>
+        </a>
       </div>
 
       <p class="security-note">
@@ -570,15 +572,12 @@
         toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2600);
       }
 
-      function launch(app) {
-        if (!validate(true)) return;
-        var isAndroid = /Android/i.test(navigator.userAgent);
-        if (!isAndroid) {
-          showToast("Choose a UPI app on an Android phone.");
-          return;
+      function prepareAppLinks() {
+        var links = document.querySelectorAll("[data-app]");
+        var linkIndex;
+        for (linkIndex = 0; linkIndex < links.length; linkIndex += 1) {
+          links[linkIndex].setAttribute("href", intentLink(links[linkIndex].getAttribute("data-app")));
         }
-        showToast("Opening your selected UPI app…");
-        window.location.href = intentLink(app);
       }
 
       amountInput.addEventListener("input", function (event) {
@@ -613,6 +612,7 @@
           amountInput.focus();
           return;
         }
+        prepareAppLinks();
         appPickerLabel.classList.add("show");
         apps.classList.add("show");
         document.querySelector("[data-app='gpay']").focus();
@@ -620,8 +620,17 @@
 
       var appButtons = document.querySelectorAll("[data-app]");
       for (i = 0; i < appButtons.length; i += 1) {
-        appButtons[i].addEventListener("click", function () {
-          launch(this.dataset.app);
+        appButtons[i].addEventListener("click", function (event) {
+          if (!validate(true)) {
+            event.preventDefault();
+            return;
+          }
+          if (!/Android/i.test(navigator.userAgent)) {
+            event.preventDefault();
+            showToast("Choose a UPI app on an Android phone.");
+            return;
+          }
+          showToast("Opening your selected UPI app…");
         });
       }
     })();

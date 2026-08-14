@@ -5,7 +5,7 @@ A static, mobile-first UPI handoff page for **Medhansh Khattar**. It does not pr
 ## Live deployments
 
 - GitHub Pages: `https://mendhivadi05-max.github.io/UPI-Pay/index.html`
-- Vercel: import this repository using the included `vercel.json`, then use the generated `.vercel.app` URL.
+- Vercel: [deploy this repository](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmendhivadi05-max%2FUPI-Pay&project-name=medhansh-upi-nfc) using the included `vercel.json`, then use the generated `.vercel.app` URL.
 
 ## Write the NFC tag
 

@@ -21,9 +21,9 @@ A static, mobile-first UPI handoff page for **Medhansh Khattar**. It does not pr
 ## Payment flow
 
 1. The visitor taps the NFC tag.
-2. The page opens and asks for an amount.
+2. The page opens and asks for an amount and an optional payment description.
 3. The visitor explicitly chooses Google Pay, PhonePe, Paytm, FamApp, or BHIM.
-4. Android opens the selected app with the payee and amount filled in.
+4. Android opens the selected app with the payee, amount, description, and a unique transaction reference filled in.
 5. The visitor verifies the details and enters their UPI PIN inside the UPI app.
 
 ## Limitations

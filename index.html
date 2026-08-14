@@ -179,6 +179,50 @@
       margin: 11px 0 4px;
     }
 
+    .description-label {
+      margin-top: 17px;
+    }
+
+    .optional {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .description-wrap {
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .description-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(92, 69, 232, 0.11);
+    }
+
+    #description {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+      font-size: 14px;
+    }
+
+    #description::placeholder { color: #a6abb5; }
+
+    .description-meta {
+      margin: 5px 3px 0;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: right;
+    }
+
     .chip {
       min-height: 36px;
       border: 1px solid var(--line);
@@ -370,6 +414,14 @@
           <button class="chip" type="button" data-amount="500">₹500</button>
         </div>
 
+        <label class="section-label description-label" for="description">
+          Description <span class="optional">(optional)</span>
+        </label>
+        <div class="description-wrap">
+          <input id="description" name="description" type="text" autocomplete="off" placeholder="e.g. Lunch or event fee" maxlength="80" aria-describedby="description-meta">
+        </div>
+        <div id="description-meta" class="description-meta"><span id="description-count">0</span>/80</div>
+
         <div id="amount-error" class="field-error" role="alert" aria-live="polite"></div>
 
         <button id="continue-button" class="primary" type="submit" disabled>Continue to pay</button>
@@ -436,6 +488,8 @@
       });
 
       const amountInput = document.querySelector("#amount");
+      const descriptionInput = document.querySelector("#description");
+      const descriptionCount = document.querySelector("#description-count");
       const error = document.querySelector("#amount-error");
       const continueButton = document.querySelector("#continue-button");
       const apps = document.querySelector("#apps");
@@ -463,18 +517,26 @@
         return !message;
       };
 
-      const params = () => new URLSearchParams({
+      const encodeParams = fields => Object.entries(fields)
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join("&");
+
+      const transactionReference = () =>
+        `NFC${Date.now().toString(36).toUpperCase()}`;
+
+      const params = () => encodeParams({
         pa: PAYEE.address,
         pn: PAYEE.name,
+        tr: transactionReference(),
+        tn: descriptionInput.value.trim() || PAYEE.note,
         am: amountValue().toFixed(2),
-        cu: PAYEE.currency,
-        tn: PAYEE.note
-      }).toString();
+        cu: PAYEE.currency
+      });
 
       const intentLink = app => {
         const packageName = PACKAGES[app];
         const fallback = encodeURIComponent(STORE_URLS[app]);
-        return `intent://pay?${params()}#Intent;scheme=upi;package=${packageName};S.browser_fallback_url=${fallback};end`;
+        return `intent://pay?${params()}#Intent;scheme=upi;package=${packageName};action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${fallback};end`;
       };
 
       const showToast = message => {
@@ -499,6 +561,13 @@
         const cleaned = cleanAmount(event.target.value);
         if (cleaned !== event.target.value) event.target.value = cleaned;
         validate(false);
+        apps.classList.remove("show");
+        appPickerLabel.classList.remove("show");
+      });
+
+      descriptionInput.addEventListener("input", () => {
+        descriptionInput.value = descriptionInput.value.replace(/[\r\n]+/g, " ");
+        descriptionCount.textContent = descriptionInput.value.length;
         apps.classList.remove("show");
         appPickerLabel.classList.remove("show");
       });

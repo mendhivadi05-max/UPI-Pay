@@ -28,7 +28,11 @@
       min-height: 100vh;
       min-height: 100svh;
       margin: 0;
+      padding: 20px 18px 22px;
       padding: max(20px, env(safe-area-inset-top)) 18px max(22px, env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: center;
       display: grid;
       place-items: center;
       overflow-x: hidden;
@@ -44,6 +48,8 @@
     button, input { font: inherit; }
 
     .page {
+      width: 100%;
+      max-width: 430px;
       width: min(100%, 430px);
       animation: arrive 420ms cubic-bezier(.2,.8,.2,1) both;
     }
@@ -427,6 +433,10 @@
         <button id="continue-button" class="primary" type="submit" disabled>Continue to pay</button>
       </form>
 
+      <noscript>
+        <p class="field-error">JavaScript is required to choose and open a UPI app. Open this page in Chrome, Samsung Internet, or another current browser.</p>
+      </noscript>
+
       <p id="app-picker-label" class="app-picker-label">Choose your UPI app</p>
       <div id="apps" class="apps" aria-labelledby="app-picker-label">
         <button class="app-button" type="button" data-app="gpay">
@@ -463,124 +473,141 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    (() => {
-      const PAYEE = Object.freeze({
+    (function () {
+      var PAYEE = {
         address: "medhanshkhattar05@okicici",
         name: "Medhansh Khattar",
         currency: "INR",
         note: "NFC payment"
-      });
+      };
 
-      const PACKAGES = Object.freeze({
+      var PACKAGES = {
         gpay: "com.google.android.apps.nbu.paisa.user",
         phonepe: "com.phonepe.app",
         paytm: "net.one97.paytm",
         famapp: "com.fampay.in",
         bhim: "in.org.npci.upiapp"
-      });
+      };
 
-      const STORE_URLS = Object.freeze({
+      var STORE_URLS = {
         gpay: "https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user",
         phonepe: "https://play.google.com/store/apps/details?id=com.phonepe.app",
         paytm: "https://play.google.com/store/apps/details?id=net.one97.paytm",
         famapp: "https://play.google.com/store/apps/details?id=com.fampay.in",
         bhim: "https://play.google.com/store/apps/details?id=in.org.npci.upiapp"
-      });
-
-      const amountInput = document.querySelector("#amount");
-      const descriptionInput = document.querySelector("#description");
-      const descriptionCount = document.querySelector("#description-count");
-      const error = document.querySelector("#amount-error");
-      const continueButton = document.querySelector("#continue-button");
-      const apps = document.querySelector("#apps");
-      const appPickerLabel = document.querySelector("#app-picker-label");
-      const toast = document.querySelector("#toast");
-      let toastTimer;
-
-      const cleanAmount = value => {
-        const normalized = value.replace(/[^\d.]/g, "");
-        const [whole = "", ...decimalParts] = normalized.split(".");
-        return decimalParts.length ? `${whole}.${decimalParts.join("").slice(0, 2)}` : whole;
       };
 
-      const amountValue = () => Number.parseFloat(amountInput.value);
+      var amountInput = document.querySelector("#amount");
+      var descriptionInput = document.querySelector("#description");
+      var descriptionCount = document.querySelector("#description-count");
+      var error = document.querySelector("#amount-error");
+      var continueButton = document.querySelector("#continue-button");
+      var apps = document.querySelector("#apps");
+      var appPickerLabel = document.querySelector("#app-picker-label");
+      var toast = document.querySelector("#toast");
+      var toastTimer;
 
-      const validate = (showError = false) => {
-        const amount = amountValue();
-        let message = "";
+      function cleanAmount(value) {
+        var normalized = value.replace(/[^\d.]/g, "");
+        var parts = normalized.split(".");
+        var whole = parts.shift() || "";
+        var decimals = parts.join("").slice(0, 2);
+        return parts.length ? whole + "." + decimals : whole;
+      }
+
+      function amountValue() {
+        return parseFloat(amountInput.value);
+      }
+
+      function validate(showError) {
+        var amount = amountValue();
+        var message = "";
         if (!amountInput.value) message = "Enter an amount to continue.";
-        else if (!Number.isFinite(amount) || amount <= 0) message = "Enter an amount greater than ₹0.";
+        else if (!isFinite(amount) || amount <= 0) message = "Enter an amount greater than ₹0.";
         else if (amount > 100000) message = "For this demo, enter ₹1,00,000 or less.";
 
         error.textContent = showError ? message : "";
         continueButton.disabled = Boolean(message);
         return !message;
-      };
+      }
 
-      const encodeParams = fields => Object.entries(fields)
-        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-        .join("&");
+      function encodeParams(fields) {
+        var pairs = [];
+        var key;
+        for (key in fields) {
+          if (Object.prototype.hasOwnProperty.call(fields, key)) {
+            pairs.push(encodeURIComponent(key) + "=" + encodeURIComponent(fields[key]));
+          }
+        }
+        return pairs.join("&");
+      }
 
-      const transactionReference = () =>
-        `NFC${Date.now().toString(36).toUpperCase()}`;
+      function transactionReference() {
+        return "NFC" + new Date().getTime().toString(36).toUpperCase();
+      }
 
-      const params = () => encodeParams({
-        pa: PAYEE.address,
-        pn: PAYEE.name,
-        tr: transactionReference(),
-        tn: descriptionInput.value.trim() || PAYEE.note,
-        am: amountValue().toFixed(2),
-        cu: PAYEE.currency
-      });
+      function params() {
+        return encodeParams({
+          pa: PAYEE.address,
+          pn: PAYEE.name,
+          tr: transactionReference(),
+          tn: descriptionInput.value.replace(/^\s+|\s+$/g, "") || PAYEE.note,
+          am: amountValue().toFixed(2),
+          cu: PAYEE.currency
+        });
+      }
 
-      const intentLink = app => {
-        const packageName = PACKAGES[app];
-        const fallback = encodeURIComponent(STORE_URLS[app]);
-        return `intent://pay?${params()}#Intent;scheme=upi;package=${packageName};action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${fallback};end`;
-      };
+      function intentLink(app) {
+        var packageName = PACKAGES[app];
+        var fallback = encodeURIComponent(STORE_URLS[app]);
+        return "intent://pay?" + params() + "#Intent;scheme=upi;package=" + packageName + ";action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=" + fallback + ";end";
+      }
 
-      const showToast = message => {
+      function showToast(message) {
         clearTimeout(toastTimer);
         toast.textContent = message;
         toast.classList.add("show");
-        toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
-      };
+        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2600);
+      }
 
-      const launch = app => {
+      function launch(app) {
         if (!validate(true)) return;
-        const isAndroid = /Android/i.test(navigator.userAgent);
+        var isAndroid = /Android/i.test(navigator.userAgent);
         if (!isAndroid) {
           showToast("Choose a UPI app on an Android phone.");
           return;
         }
         showToast("Opening your selected UPI app…");
         window.location.href = intentLink(app);
-      };
+      }
 
-      amountInput.addEventListener("input", event => {
-        const cleaned = cleanAmount(event.target.value);
+      amountInput.addEventListener("input", function (event) {
+        var cleaned = cleanAmount(event.target.value);
         if (cleaned !== event.target.value) event.target.value = cleaned;
         validate(false);
         apps.classList.remove("show");
         appPickerLabel.classList.remove("show");
       });
 
-      descriptionInput.addEventListener("input", () => {
+      descriptionInput.addEventListener("input", function () {
         descriptionInput.value = descriptionInput.value.replace(/[\r\n]+/g, " ");
         descriptionCount.textContent = descriptionInput.value.length;
         apps.classList.remove("show");
         appPickerLabel.classList.remove("show");
       });
 
-      document.querySelectorAll("[data-amount]").forEach(button => {
-        button.addEventListener("click", () => {
+      var amountButtons = document.querySelectorAll("[data-amount]");
+      var i;
+      for (i = 0; i < amountButtons.length; i += 1) {
+        amountButtons[i].addEventListener("click", function () {
+          var button = this;
           amountInput.value = button.dataset.amount;
           validate(false);
           amountInput.focus();
         });
-      });
+      }
 
-      document.querySelector("#payment-form").addEventListener("submit", event => {
+      document.querySelector("#payment-form").addEventListener("submit", function (event) {
         event.preventDefault();
         if (!validate(true)) {
           amountInput.focus();
@@ -588,12 +615,15 @@
         }
         appPickerLabel.classList.add("show");
         apps.classList.add("show");
-        document.querySelector("[data-app='gpay']").focus({ preventScroll: true });
+        document.querySelector("[data-app='gpay']").focus();
       });
 
-      document.querySelectorAll("[data-app]").forEach(button => {
-        button.addEventListener("click", () => launch(button.dataset.app));
-      });
+      var appButtons = document.querySelectorAll("[data-app]");
+      for (i = 0; i < appButtons.length; i += 1) {
+        appButtons[i].addEventListener("click", function () {
+          launch(this.dataset.app);
+        });
+      }
     })();
   </script>
 </body>
